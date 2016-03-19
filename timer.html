@@ -1,0 +1,92 @@
+<head>
+    <title>Timer</title>
+    <meta charset="utf-8">
+    <link href="../base1/cockpit.css" type="text/css" rel="stylesheet">
+    <script src="../base1/jquery.js"></script>
+    <script src="../base1/cockpit.js"></script>
+</head>
+<body>
+<br>
+<div class="panel panel-default" style='max-width: 600px;align:center'>
+	<div class="panel-heading">
+        <span class="pull-right">
+          <button id="create-timer" class="btn btn-primary fa fa-plus"></button>
+        </span>
+        <span translatable="yes">Creates a Timer and Service</span>
+    </div>
+    <table class="cockpit-form-table">
+    	<tbody>
+
+        <tr>
+                <td><label class="control-label" >Service name</label></td>
+                <td><input class="form-control" name="service" id="service"></input></td>
+        </tr>
+		<tr>
+                <td><label class="control-label" >Command</label></td>
+                <td><input class="form-control" name="command" id="command"></input></td>
+        </tr>
+        <tr>
+                <td><label class="control-label" >Description</label></td>
+                <td><input class="form-control" id="description" placeholder='optional'></input></td>
+        </tr>
+        <tr>
+                <td><label class="control-label" >Repeat Daily at</label></td>
+
+                <td><input class="form-control" id="hour" placeholder='hr' type="number" min="00" max="23" ></input></td>
+                <td><input class="form-control" id="min" placeholder='min' type="number" min="00" max="59" ></input></td>
+                <td><input class="form-control" id="sec" placeholder='sec' type="number" min="00" max="59" ></input></td>
+        </tr>
+        <tr>
+        	<td>
+                <button class="btn btn-primary" id="submit">Submit</button>
+        	</td>
+        </tr>
+    </tbody>
+    </table>
+</div>
+<script >
+$("#submit").on("click", create_timer);
+
+var service_name=$("#service");
+var unit="[Unit]\nDescription=";
+var service="\n[Service]\nType=oneshot\nExecStart=";
+var timer="\n[Timer]\nOnBootSec=5min\nOnCalendar=*-*-* ";
+var command = $("#command");
+var description = $("#description");
+var hour = $("#hour");
+var minute = $("#min");
+var second = $("#sec");
+
+
+var systemd_client = cockpit.dbus("org.freedesktop.systemd1", { superuser: "try" });
+var systemd_manager = systemd_client.proxy("org.freedesktop.systemd1.Manager",
+                                               "/org/freedesktop/systemd1");
+function create_timer () {
+    var service_path = "/etc/systemd/system/"+service_name.val()+".service";
+    var timer_path = "/etc/systemd/system/"+service_name.val()+".timer";
+	file = cockpit.file(service_path,{superuser:'try'});
+	var service_file = unit+description.val()+service+command.val()
+	var timer_file=unit+description.val()+timer+hour.val()+":"+minute.val()+":"+second.val();
+	console.log(service_file);
+	console.log(timer_file);
+	file.replace(service_file).fail(function(error){console.log(error);});
+	file = cockpit.file(timer_path,{superuser:'try'});
+	file.replace(timer_file).fail(function(error){console.log(error);});
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+
